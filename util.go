@@ -3,15 +3,18 @@ package util
 import (
 	"bufio"
 	"bytes"
+	"encoding/base64"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"io"
 	"log"
 	"os"
 	"strings"
 	"text/template"
 	"github.com/Masterminds/sprig"
+	"crypto/rand"
 )
 
 // toPrettyJson encodes an item into a pretty (indented) JSON string
@@ -81,4 +84,28 @@ func PrintIfErr(e error, msg string, arg interface{}) {
 	if e != nil {
 		log.Printf("Error: %v Msg: %v Arg: %v", e, msg, arg)
 	}
+}
+
+func RandomToken() string {
+	b := make([]byte, 32)
+	rand.Read(b)
+	return base64.StdEncoding.EncodeToString(b)
+}
+
+func UserPassword(username, password string) string {
+	auth := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
+}
+
+func Uuid() string {
+	return fmt.Sprintf("%s", uuid.New())
+}
+
+func Indent(spaces int, v string) string {
+	pad := strings.Repeat(" ", spaces)
+	return pad + strings.Replace(v, "\n", "\n"+pad, -1)
+}
+
+func Replace(old, new, src string) string {
+	return strings.Replace(src, old, new, -1)
 }
