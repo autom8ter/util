@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/Masterminds/sprig"
 	"github.com/google/uuid"
-	"github.com/gorilla/securecookie"
 	"io"
 	"log"
 	"os"
