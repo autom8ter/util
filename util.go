@@ -3,18 +3,19 @@ package util
 import (
 	"bufio"
 	"bytes"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"github.com/Masterminds/sprig"
 	"github.com/google/uuid"
+	"github.com/gorilla/securecookie"
 	"io"
 	"log"
 	"os"
 	"strings"
 	"text/template"
-	"github.com/Masterminds/sprig"
-	"crypto/rand"
 )
 
 // toPrettyJson encodes an item into a pretty (indented) JSON string
@@ -22,6 +23,7 @@ func ToPrettyJsonString(obj interface{}) string {
 	output, _ := json.MarshalIndent(obj, "", "  ")
 	return fmt.Sprintf("%s", output)
 }
+
 // toPrettyJson encodes an item into a pretty (indented) JSON string
 func ToPrettyJson(obj interface{}) []byte {
 	output, _ := json.MarshalIndent(obj, "", "  ")
@@ -61,7 +63,7 @@ func ScanAndReplace(r io.Reader, replacements ...string) string {
 	return text
 }
 
-func  Render(s string, data interface{}) string {
+func Render(s string, data interface{}) string {
 	if strings.Contains(s, "{{") {
 		t, err := template.New("").Funcs(sprig.GenericFuncMap()).Parse(s)
 		FatalIfErr(err, "failed to create template to render string", s)
