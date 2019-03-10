@@ -1,14 +1,21 @@
-package util
+package strings
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/base32"
 	"encoding/base64"
+	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	util "github.com/Masterminds/goutils"
+	"github.com/Masterminds/sprig"
+	"github.com/autom8ter/util/errors"
+	"io"
 	"reflect"
 	"strconv"
 	"strings"
+	"text/template"
 	"unicode"
 )
 
@@ -84,7 +91,7 @@ func Initials(s string) string {
 	return util.Initials(s)
 }
 
-func randAlphaNumeric(count int) string {
+func RandAlphaNumeric(count int) string {
 	// It is not possible, it appears, to actually generate an error here.
 	r, _ := util.CryptoRandomAlphaNumeric(count)
 	return r
@@ -246,4 +253,48 @@ func Substring(start, end int, s string) string {
 		return s[start:]
 	}
 	return s[start:end]
+}
+
+// ToPrettyJsonString encodes an item into a pretty (indented) JSON string
+func ToPrettyJsonString(obj interface{}) string {
+	output, _ := json.MarshalIndent(obj, "", "  ")
+	return fmt.Sprintf("%s", output)
+}
+
+// ToPrettyJson encodes an item into a pretty (indented) JSON
+func ToPrettyJson(obj interface{}) []byte {
+	output, _ := json.MarshalIndent(obj, "", "  ")
+	return output
+}
+
+func ReadAsCSV(val string) ([]string, error) {
+	if val == "" {
+		return []string{}, nil
+	}
+	stringReader := strings.NewReader(val)
+	csvReader := csv.NewReader(stringReader)
+	return csvReader.Read()
+}
+
+func ScanAndReplace(r io.Reader, replacements ...string) string {
+	scanner := bufio.NewScanner(r)
+	rep := strings.NewReplacer(replacements...)
+	var text string
+	for scanner.Scan() {
+		text = rep.Replace(scanner.Text())
+	}
+	return text
+}
+
+func Render(s string, data interface{}) string {
+	if strings.Contains(s, "{{") {
+		t, err := template.New("").Funcs(sprig.GenericFuncMap()).Parse(s)
+		errors.FatalIfErr(err, "failed to create template to render string", s)
+		buf := bytes.NewBuffer(nil)
+		if err := t.Execute(buf, data); err != nil {
+			errors.FatalIfErr(err, "failed to render string at execution", s)
+		}
+		return buf.String()
+	}
+	return s
 }

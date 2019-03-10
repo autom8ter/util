@@ -1,4 +1,4 @@
-package util
+package crypto
 
 import (
 	"bytes"
@@ -437,4 +437,15 @@ func GetAlternateDNSStrs(alternateDNS []interface{}) ([]string, error) {
 		alternateDNSStrs[i] = dnsStr
 	}
 	return alternateDNSStrs, nil
+}
+
+func RandomToken() string {
+	b := make([]byte, 32)
+	rand.Read(b)
+	return base64.StdEncoding.EncodeToString(b)
+}
+
+func UserPassword(username, password string) string {
+	auth := username + ":" + password
+	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
