@@ -17,6 +17,8 @@ func InitConfig(cfgFile string, envPrefix string, safeWrite bool) {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
 	if safeWrite {
-		viper.SafeWriteConfig()
+		if err := viper.SafeWriteConfig(); err != nil {
+			fmt.Println(err.Error())
+		}
 	}
 }
