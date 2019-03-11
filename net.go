@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
+	"log"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -40,7 +41,6 @@ func RequestBasicAuth(userName, password string, r *http.Request) {
 	r.SetBasicAuth(userName, password)
 }
 
-
 func WithLogging(r http.Handler) http.Handler {
 	return handlers.LoggingHandler(os.Stdout, r)
 }
@@ -51,30 +51,35 @@ func NotImplememntedFunc() http.HandlerFunc {
 	}
 }
 
-
 func OnErrorUnauthorized(w http.ResponseWriter, r *http.Request, err string) {
 	http.Error(w, err, http.StatusUnauthorized)
 }
-
 
 func OnErrorInternal(w http.ResponseWriter, r *http.Request, err string) {
 	http.Error(w, err, http.StatusInternalServerError)
 }
 
-func WithStatus(r *mux.Router)  {
+func WithStatus(r *mux.Router) {
 	r.HandleFunc("/status", func(w http.ResponseWriter, request *http.Request) {
 		fmt.Println("registered handler: ", "/status")
 		w.Write([]byte("API is up and running"))
 	})
 }
-func WithSettings(r *mux.Router)  {
+func WithSettings(r *mux.Router) {
 	r.HandleFunc("/settings", func(w http.ResponseWriter, request *http.Request) {
 		fmt.Println("registered handler: ", "/settings")
 		w.Write([]byte(ToPrettyJsonString(viper.AllSettings())))
 	})
 }
 
-func WithStaticViews(r *mux.Router){
+func WithVars(r *mux.Router) {
+	r.HandleFunc("/vars", func(w http.ResponseWriter, request *http.Request) {
+		fmt.Println("registered handler: ", "/vars")
+		w.Write([]byte(ToPrettyJsonString(RequestVars(request))))
+	})
+}
+
+func WithStaticViews(r *mux.Router) {
 	// On the default page we will simply serve our static index page.
 	r.Handle("/", http.FileServer(http.Dir("./views/")))
 	fmt.Println("registered file server handler: ", "./views/")
@@ -85,4 +90,23 @@ func WithStaticViews(r *mux.Router){
 
 func RequestVars(req *http.Request) map[string]string {
 	return mux.Vars(req)
+}
+
+func LogRoutes(r *mux.Router) {
+	if err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		meth, _ := route.GetMethods()
+		rout := &routeLog{
+			Name:    route.GetName(),
+			Methods: meth,
+		}
+		fmt.Println("Registered Handler: ", ToPrettyJsonString(rout))
+		return nil
+	}); err != nil {
+		log.Fatal(err.Error())
+	}
+}
+
+type routeLog struct {
+	Name    string
+	Methods []string
 }
