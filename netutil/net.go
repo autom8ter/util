@@ -188,10 +188,10 @@ func ListenAndServe(r *mux.Router, addr string) error {
 	return http.ListenAndServe(addr, WithLogging(r))
 }
 
-func WithAll(r *mux.Router) {
+
+func WithDebug(r *mux.Router) {
 	WithPProf(r)
 	WithSettings(r)
-	WithStaticViews(r)
 	WithStatus(r)
 	WithVars(r)
 	WithRoutes(r)
