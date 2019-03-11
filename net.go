@@ -20,3 +20,19 @@ func WithPProf(r *mux.Router) *mux.Router {
 var NotImplemented = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Not Implemented"))
 })
+
+func ResponseHeaders(headers map[string]string, w http.ResponseWriter) {
+	for k, v := range headers {
+		w.Header().Set(k, v)
+	}
+}
+
+func RequestHeaders(headers map[string]string, r *http.Request) {
+	for k, v := range headers {
+		r.Header.Set(k, v)
+	}
+}
+
+func RequestBasicAuth(userName, password string, r *http.Request) {
+	r.SetBasicAuth(userName, password)
+}
