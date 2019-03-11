@@ -16,12 +16,13 @@ import (
 
 type JWTRouter struct {
 	*mux.Router
-	SignKey       string
-	Claims        map[string]interface{}
-	OAuthSecret   string
-	OAuthAudience []string
-	Domain        string
-	Callback      string
+	SignKey       	string
+	Claims        	map[string]interface{}
+	ClientID   		string
+	ClientSecret 	string
+	Audience 		[]string
+	Domain        	string
+	Callback      	string
 }
 
 func NewJWTRouter() *JWTRouter {
@@ -30,15 +31,16 @@ func NewJWTRouter() *JWTRouter {
 	claims["admin"] = true
 	claims["name"] = os.Getenv("USER")
 	viper.SetDefault("callback", "localhost:8080/callback")
-	viper.SetDefault("jwt.signing-key", "mysupersecretsigningkey")
-	viper.SetDefault("jwt.claims", claims)
+	viper.SetDefault("signkey", "mysupersecretsigningkey")
+	viper.SetDefault("claims", claims)
 	return &JWTRouter{
 		Router:        mux.NewRouter(),
-		SignKey:       viper.GetString("jwt.signing-key"),
-		Claims:        viper.GetStringMap("jwt.claims"),
-		OAuthAudience: viper.GetStringSlice("oauth.audience"),
-		OAuthSecret:   viper.GetString("oauth.secret"),
-		Domain:        viper.GetString("oauth.domain"),
+		SignKey:       viper.GetString("signkey"),
+		Claims:        viper.GetStringMap("claims"),
+		Audience: viper.GetStringSlice("audience"),
+		ClientSecret:   viper.GetString("client-secret"),
+		ClientID: viper.GetString("client-id"),
+		Domain:        viper.GetString("domain"),
 		Callback:      viper.GetString("callback"),
 	}
 
@@ -87,7 +89,7 @@ func (j *JWTRouter) WithJWT(path string, method []string, handler http.HandlerFu
 
 func (j *JWTRouter) Auth0Middleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var secret = []byte(j.OAuthSecret)
+		var secret = []byte(j.ClientSecret)
 		var issuer string
 		switch {
 		case strings.Contains("https", j.Domain):
@@ -97,7 +99,7 @@ func (j *JWTRouter) Auth0Middleware(next http.Handler) http.Handler {
 		}
 		secretProvider := auth0.NewKeyProvider(secret)
 
-		configuration := auth0.NewConfiguration(secretProvider, j.OAuthAudience, issuer, jose.HS256)
+		configuration := auth0.NewConfiguration(secretProvider, j.Audience, issuer, jose.HS256)
 		validator := auth0.NewValidator(configuration, nil)
 
 		token, err := validator.ValidateRequest(r)
@@ -106,7 +108,7 @@ func (j *JWTRouter) Auth0Middleware(next http.Handler) http.Handler {
 			fmt.Println(err)
 			fmt.Println("Token is not valid:", token)
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Unauthorized"))
+			w.Write([]byte(fmt.Sprintf("Unauthorized \n%s", err.Error())))
 		} else {
 			next.ServeHTTP(w, r)
 		}
