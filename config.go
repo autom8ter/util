@@ -1,4 +1,4 @@
-package config
+package util
 
 import (
 	"fmt"
@@ -17,4 +17,3 @@ func InitConfig(cfgFile string, envPrefix string) {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	}
 }
-

@@ -1,4 +1,4 @@
-package strings
+package util
 
 import (
 	"bufio"
@@ -10,7 +10,6 @@ import (
 	"fmt"
 	util "github.com/Masterminds/goutils"
 	"github.com/Masterminds/sprig"
-	"github.com/autom8ter/util/errors"
 	"io"
 	"reflect"
 	"strconv"
@@ -289,10 +288,10 @@ func ScanAndReplace(r io.Reader, replacements ...string) string {
 func Render(s string, data interface{}) string {
 	if strings.Contains(s, "{{") {
 		t, err := template.New("").Funcs(sprig.GenericFuncMap()).Parse(s)
-		errors.FatalIfErr(err, "failed to create template to render string", s)
+		FatalIfErr(err, "failed to create template to render string", s)
 		buf := bytes.NewBuffer(nil)
 		if err := t.Execute(buf, data); err != nil {
-			errors.FatalIfErr(err, "failed to render string at execution", s)
+			FatalIfErr(err, "failed to render string at execution", s)
 		}
 		return buf.String()
 	}
