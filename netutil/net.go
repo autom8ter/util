@@ -180,3 +180,8 @@ func WithMetrics(r *mux.Router) {
 	})
 	r.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
 }
+
+func ListenAndServe(r *mux.Router, addr string) error {
+	fmt.Printf("starting http server on: %s\n", addr)
+	return http.ListenAndServe(addr, WithLogging(r))
+}
