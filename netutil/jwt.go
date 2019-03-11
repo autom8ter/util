@@ -9,7 +9,9 @@ import (
 	"github.com/spf13/viper"
 	"gopkg.in/square/go-jose.v2"
 	"net/http"
+	"os"
 	"strings"
+	"time"
 )
 
 type JWTRouter struct {
@@ -23,6 +25,13 @@ type JWTRouter struct {
 }
 
 func NewJWTRouter() *JWTRouter {
+	claims := make(map[string]interface{})
+	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
+	claims["admin"] = true
+	claims["name"] = os.Getenv("USER")
+	viper.SetDefault("callback", "localhost:8080/callback")
+	viper.SetDefault("jwt.signing-key", "mysupersecretsigningkey")
+	viper.SetDefault("jwt.claims", claims)
 	return &JWTRouter{
 		Router:        mux.NewRouter(),
 		SignKey:       viper.GetString("jwt.signing-key"),

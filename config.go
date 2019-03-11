@@ -6,7 +6,7 @@ import (
 )
 
 // initConfig reads in config file and ENV variables if set.
-func InitConfig(cfgFile string, envPrefix string) {
+func InitConfig(cfgFile string, envPrefix string, safeWrite bool) {
 	viper.SetConfigFile(cfgFile)
 	if envPrefix != "" {
 		viper.SetEnvPrefix(envPrefix)
@@ -15,5 +15,8 @@ func InitConfig(cfgFile string, envPrefix string) {
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
+	}
+	if safeWrite {
+		viper.SafeWriteConfig()
 	}
 }
