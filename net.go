@@ -3,6 +3,7 @@ package util
 import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/spf13/viper"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -52,4 +53,15 @@ func OnErrorUnauthorized(w http.ResponseWriter, r *http.Request, err string) {
 
 func OnErrorInternal(w http.ResponseWriter, r *http.Request, err string) {
 	http.Error(w, err, http.StatusInternalServerError)
+}
+
+func WithStatus(r *mux.Router)  {
+	r.HandleFunc("/status", func(w http.ResponseWriter, request *http.Request) {
+		w.Write([]byte("API is up and running"))
+	})
+}
+func WithSettings(r *mux.Router)  {
+	r.HandleFunc("/settings", func(w http.ResponseWriter, request *http.Request) {
+		w.Write([]byte(ToPrettyJsonString(viper.AllSettings())))
+	})
 }
