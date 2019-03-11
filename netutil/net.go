@@ -179,6 +179,7 @@ func WithMetrics(r *mux.Router) {
 		route = route.Handler(chain)
 		return nil
 	})
+	fmt.Println("registered handler: ", "/metrics")
 	r.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
 }
 
