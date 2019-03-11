@@ -1,6 +1,7 @@
 package util
 
 import (
+	"fmt"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
@@ -10,10 +11,15 @@ import (
 )
 
 func WithPProf(r *mux.Router) *mux.Router {
+	fmt.Println("registered handler: ", "/debug/pprof/")
 	r.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
+	fmt.Println("registered handler: ", "/debug/pprof/cmdline")
 	r.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
+	fmt.Println("registered handler: ", "/debug/pprof/profile")
 	r.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
+	fmt.Println("registered handler: ", "/debug/pprof/symbol")
 	r.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
+	fmt.Println("registered handler: ", "/debug/pprof/trace")
 	r.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
 	return r
 }
@@ -57,11 +63,13 @@ func OnErrorInternal(w http.ResponseWriter, r *http.Request, err string) {
 
 func WithStatus(r *mux.Router)  {
 	r.HandleFunc("/status", func(w http.ResponseWriter, request *http.Request) {
+		fmt.Println("registered handler: ", "/status")
 		w.Write([]byte("API is up and running"))
 	})
 }
 func WithSettings(r *mux.Router)  {
 	r.HandleFunc("/settings", func(w http.ResponseWriter, request *http.Request) {
+		fmt.Println("registered handler: ", "/settings")
 		w.Write([]byte(ToPrettyJsonString(viper.AllSettings())))
 	})
 }
@@ -69,9 +77,10 @@ func WithSettings(r *mux.Router)  {
 func WithStaticViews(r *mux.Router){
 	// On the default page we will simply serve our static index page.
 	r.Handle("/", http.FileServer(http.Dir("./views/")))
+	fmt.Println("registered file server handler: ", "./views/")
 	// We will setup our server so we can serve static assest like images, css from the /static/{file} route
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
-
+	fmt.Println("registered file server handler: ", "./static/")
 }
 
 func RequestVars(req *http.Request) map[string]string {
