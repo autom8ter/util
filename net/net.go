@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
-	"time"
 	"github.com/gorilla/mux"
 )
 
@@ -26,7 +25,7 @@ func ClientAPI(req *http.Request) http.HandlerFunc {
 	}
 }
 
-func ClientAPIWithJWT(req *http.Request, signKey, clientName string, exp *time.Time) http.HandlerFunc {
+func ClientAPIWithJWT(req *http.Request, signKey, clientName string, exp int64) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		client := &http.Client{}
 		validToken, err := GenerateJWT(signKey, clientName, exp)
@@ -47,7 +46,7 @@ func ClientAPIWithJWT(req *http.Request, signKey, clientName string, exp *time.T
 	}
 }
 
-func GenerateJWT(signKey, client string, exp *time.Time) (string, error) {
+func GenerateJWT(signKey, client string, exp int64) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
