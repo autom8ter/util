@@ -5,7 +5,6 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
-	"log"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -92,33 +91,36 @@ func RequestVars(req *http.Request) map[string]string {
 	return mux.Vars(req)
 }
 
-func LogRoutes(r *mux.Router) {
-	if err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-		meth, _ := route.GetMethods()
-		host, _ := route.GetHostTemplate()
-		qreg, _ := route.GetQueriesRegexp()
-		pathreg, _ := route.GetPathRegexp()
-		pathtemp, _ := route.GetPathTemplate()
-		rout := &routeLog{
-			Name:          route.GetName(),
-			PathRegExp:    pathreg,
-			PathTemplate:  pathtemp,
-			HostTemplate:  host,
-			QueriesRegExp: qreg,
-			Methods:       meth,
+func WithRoutes(r *mux.Router) {
+	r.HandleFunc("/routes", func(w http.ResponseWriter, req *http.Request) {
+		err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+			meth, _ := route.GetMethods()
+			host, _ := route.GetHostTemplate()
+			pathreg, _ := route.GetPathRegexp()
+			pathtemp, _ := route.GetPathTemplate()
+			rout := &routeLog{
+				Name:         route.GetName(),
+				PathRegExp:   pathreg,
+				PathTemplate: pathtemp,
+				HostTemplate: host,
+				Methods:      meth,
+			}
+			w.Write([]byte(ToPrettyJson(rout)))
+			fmt.Println("registered handler: ", ToPrettyJsonString(rout))
+			return nil
+		})
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
 		}
-		fmt.Println("registered handler: ", ToPrettyJsonString(rout))
-		return nil
-	}); err != nil {
-		log.Fatal(err.Error())
-	}
+	})
+
 }
 
 type routeLog struct {
-	Name          string
-	PathRegExp    string
-	PathTemplate  string
-	HostTemplate  string
-	QueriesRegExp []string
-	Methods       []string
+	Name         string
+	PathRegExp   string
+	PathTemplate string
+	HostTemplate string
+	Methods      []string
 }
