@@ -187,3 +187,13 @@ func ListenAndServe(r *mux.Router, addr string) error {
 	fmt.Printf("starting http server on: %s\n", addr)
 	return http.ListenAndServe(addr, WithLogging(r))
 }
+
+func WithAll(r *mux.Router) {
+	WithPProf(r)
+	WithSettings(r)
+	WithStaticViews(r)
+	WithStatus(r)
+	WithVars(r)
+	WithRoutes(r)
+	WithMetrics(r)
+}
