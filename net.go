@@ -1,9 +1,11 @@
 package util
 
 import (
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"net/http"
 	"net/http/pprof"
+	"os"
 )
 
 func WithPProf(r *mux.Router) *mux.Router {
@@ -14,12 +16,6 @@ func WithPProf(r *mux.Router) *mux.Router {
 	r.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
 	return r
 }
-
-// Here we are implementing the NotImplemented handler. Whenever an API endpoint is hit
-// we will simply return the message "Not Implemented"
-var NotImplemented = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Not Implemented"))
-})
 
 func ResponseHeaders(headers map[string]string, w http.ResponseWriter) {
 	for k, v := range headers {
@@ -35,4 +31,25 @@ func RequestHeaders(headers map[string]string, r *http.Request) {
 
 func RequestBasicAuth(userName, password string, r *http.Request) {
 	r.SetBasicAuth(userName, password)
+}
+
+
+func WithLogging(r http.Handler) http.Handler {
+	return handlers.LoggingHandler(os.Stdout, r)
+}
+
+func NotImplememntedFunc() http.HandlerFunc {
+	return func(w http.ResponseWriter, request *http.Request) {
+		w.Write([]byte("Not Implemented"))
+	}
+}
+
+
+func OnErrorUnauthorized(w http.ResponseWriter, r *http.Request, err string) {
+	http.Error(w, err, http.StatusUnauthorized)
+}
+
+
+func OnErrorInternal(w http.ResponseWriter, r *http.Request, err string) {
+	http.Error(w, err, http.StatusInternalServerError)
 }
