@@ -95,11 +95,19 @@ func RequestVars(req *http.Request) map[string]string {
 func LogRoutes(r *mux.Router) {
 	if err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
 		meth, _ := route.GetMethods()
+		host, _ := route.GetHostTemplate()
+		qreg, _ := route.GetQueriesRegexp()
+		pathreg, _ := route.GetPathRegexp()
+		pathtemp, _ := route.GetPathTemplate()
 		rout := &routeLog{
-			Name:    route.GetName(),
-			Methods: meth,
+			Name:          route.GetName(),
+			PathRegExp:    pathreg,
+			PathTemplate:  pathtemp,
+			HostTemplate:  host,
+			QueriesRegExp: qreg,
+			Methods:       meth,
 		}
-		fmt.Println("Registered Handler: ", ToPrettyJsonString(rout))
+		fmt.Println("registered handler: ", ToPrettyJsonString(rout))
 		return nil
 	}); err != nil {
 		log.Fatal(err.Error())
@@ -107,6 +115,10 @@ func LogRoutes(r *mux.Router) {
 }
 
 type routeLog struct {
-	Name    string
-	Methods []string
+	Name          string
+	PathRegExp    string
+	PathTemplate  string
+	HostTemplate  string
+	QueriesRegExp []string
+	Methods       []string
 }
