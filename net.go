@@ -12,7 +12,7 @@ import (
 
 func WithPProf(r *mux.Router) *mux.Router {
 	fmt.Println("registered handler: ", "/debug/pprof/")
-	r.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
+	r.Handle("/debug/pprof", http.HandlerFunc(pprof.Index))
 	fmt.Println("registered handler: ", "/debug/pprof/cmdline")
 	r.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
 	fmt.Println("registered handler: ", "/debug/pprof/profile")
