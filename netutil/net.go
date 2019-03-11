@@ -1,9 +1,12 @@
-package util
+package netutil
 
 import (
 	"fmt"
+	"github.com/autom8ter/util"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"net/http"
 	"net/http/pprof"
@@ -67,14 +70,14 @@ func WithStatus(r *mux.Router) {
 func WithSettings(r *mux.Router) {
 	r.HandleFunc("/settings", func(w http.ResponseWriter, request *http.Request) {
 		fmt.Println("registered handler: ", "/settings")
-		w.Write([]byte(ToPrettyJsonString(viper.AllSettings())))
+		w.Write([]byte(util.ToPrettyJsonString(viper.AllSettings())))
 	})
 }
 
 func WithVars(r *mux.Router) {
 	r.HandleFunc("/vars", func(w http.ResponseWriter, request *http.Request) {
 		fmt.Println("registered handler: ", "/vars")
-		w.Write([]byte(ToPrettyJsonString(RequestVars(request))))
+		w.Write([]byte(util.ToPrettyJsonString(RequestVars(request))))
 	})
 }
 
@@ -94,6 +97,13 @@ func RequestVars(req *http.Request) map[string]string {
 func WithRoutes(r *mux.Router) {
 	r.HandleFunc("/routes", func(w http.ResponseWriter, req *http.Request) {
 		err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+			type routeLog struct {
+				Name         string
+				PathRegExp   string
+				PathTemplate string
+				HostTemplate string
+				Methods      []string
+			}
 			meth, _ := route.GetMethods()
 			host, _ := route.GetHostTemplate()
 			pathreg, _ := route.GetPathRegexp()
@@ -105,8 +115,8 @@ func WithRoutes(r *mux.Router) {
 				HostTemplate: host,
 				Methods:      meth,
 			}
-			w.Write([]byte(ToPrettyJson(rout)))
-			fmt.Println("registered handler: ", ToPrettyJsonString(rout))
+			w.Write([]byte(util.ToPrettyJson(rout)))
+			fmt.Println("registered handler: ", util.ToPrettyJsonString(rout))
 			return nil
 		})
 		if err != nil {
@@ -114,13 +124,59 @@ func WithRoutes(r *mux.Router) {
 			w.Write([]byte(err.Error()))
 		}
 	})
-
 }
 
-type routeLog struct {
-	Name         string
-	PathRegExp   string
-	PathTemplate string
-	HostTemplate string
-	Methods      []string
+func WithMetrics(r *mux.Router) {
+	var (
+		inFlightGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+			Name: "in_flight_requests",
+			Help: "A gauge of requests currently being served by the wrapped handler.",
+		})
+
+		counter = prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "api_requests_total",
+				Help: "A counter for requests to the wrapped handler.",
+			},
+			[]string{"code", "method"},
+		)
+
+		// duration is partitioned by the HTTP method and handler. It uses custom
+		// buckets based on the expected request duration.
+		duration = prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name:    "request_duration_seconds",
+				Help:    "A histogram of latencies for requests.",
+				Buckets: []float64{.25, .5, 1, 2.5, 5, 10},
+			},
+			[]string{"handler", "method"},
+		)
+
+		// responseSize has no labels, making it a zero-dimensional
+		// ObserverVec.
+		responseSize = prometheus.NewHistogramVec(
+			prometheus.HistogramOpts{
+				Name:    "response_size_bytes",
+				Help:    "A histogram of response sizes for requests.",
+				Buckets: []float64{200, 500, 900, 1500},
+			},
+			[]string{},
+		)
+	)
+
+	// Register all of the metrics in the standard registry.
+	prometheus.MustRegister(inFlightGauge, counter, duration, responseSize)
+	var chain http.Handler
+	r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		pth, _ := route.GetPathTemplate()
+		chain = promhttp.InstrumentHandlerInFlight(inFlightGauge,
+			promhttp.InstrumentHandlerDuration(duration.MustCurryWith(prometheus.Labels{"handler": pth}),
+				promhttp.InstrumentHandlerCounter(counter,
+					promhttp.InstrumentHandlerResponseSize(responseSize, route.GetHandler()),
+				),
+			),
+		)
+		return nil
+	})
+	r.Handle("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}))
 }

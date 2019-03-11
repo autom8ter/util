@@ -14,6 +14,7 @@ require (
 	github.com/huandu/xstrings v1.2.0 // indirect
 	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/prometheus/client_golang v0.9.2 // indirect
 	github.com/spf13/viper v1.3.1
 	golang.org/x/crypto v0.0.0-20190219172222-a4c6cb3142f2
 	golang.org/x/net v0.0.0-20190310074541-c10a0554eabf // indirect
