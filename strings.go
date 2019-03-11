@@ -297,3 +297,7 @@ func Render(s string, data interface{}) string {
 	}
 	return s
 }
+
+func HorizontalLine() {
+	fmt.Println("<------------------------------------------------------------------------------------>")
+}
