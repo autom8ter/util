@@ -5,7 +5,9 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"net/http"
+	"net/http/pprof"
 	"time"
+	"github.com/gorilla/mux"
 )
 
 func ClientAPI(req *http.Request) http.HandlerFunc {
@@ -88,4 +90,13 @@ func JWTAuthorized(signKey string, endpoint func(http.ResponseWriter, *http.Requ
 			fmt.Fprintf(w, "Not Authorized")
 		}
 	})
+}
+
+func WithPProf(r *mux.Router) *mux.Router {
+	r.Handle("/debug/pprof/", http.HandlerFunc(pprof.Index))
+	r.Handle("/debug/pprof/cmdline", http.HandlerFunc(pprof.Cmdline))
+	r.Handle("/debug/pprof/profile", http.HandlerFunc(pprof.Profile))
+	r.Handle("/debug/pprof/symbol", http.HandlerFunc(pprof.Symbol))
+	r.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
+	return r
 }
