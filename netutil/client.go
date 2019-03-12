@@ -2,6 +2,7 @@ package netutil
 
 import (
 	"github.com/autom8ter/util"
+	"github.com/gorilla/sessions"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -127,6 +128,10 @@ func (c *Client) Init(cfgFile string, envPrefix string, headers map[string]strin
 
 func (r *Client) Render(s string, data interface{}) string {
 	return util.Render(s, data)
+}
+
+func (r *Client) NewSessionStore(key string) *sessions.CookieStore {
+	return NewSessionStore(key)
 }
 
 type ClientFunc func(c *Client, args []string)

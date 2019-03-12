@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/autom8ter/util"
 	"github.com/gorilla/mux"
+	"github.com/gorilla/sessions"
 	"github.com/urfave/negroni"
 	"math/rand"
 	"net/http"
@@ -134,4 +135,16 @@ func (r *Router) GeneratePrivateKey(typ string) string {
 
 func (r *Router) Render(s string, data interface{}) string {
 	return util.Render(s, data)
+}
+
+func (r *Router) SetSessionValFunc(cookieStore *sessions.CookieStore, name string, vals map[string]interface{}) http.HandlerFunc {
+	return SetSessionValFunc(cookieStore, name, vals)
+}
+
+func (r *Router) NewSessionStore(key string) *sessions.CookieStore {
+	return NewSessionStore(key)
+}
+
+func (r *Router) AddFlashSessionFunc(cookieStore *sessions.CookieStore, name string, val interface{}, vars ...string) http.HandlerFunc {
+	return AddFlashSessionFunc(cookieStore, name, val, vars...)
 }
