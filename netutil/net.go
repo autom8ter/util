@@ -147,7 +147,7 @@ func WithMetrics(r *mux.Router) {
 			prometheus.HistogramOpts{
 				Name:    "request_duration_seconds",
 				Help:    "A histogram of latencies for requests.",
-				Buckets: []float64{.25, .5, 1, 2.5, 5, 10},
+				Buckets: []float64{.025, .05, .1, .25, .5, 1},
 			},
 			[]string{"handler", "method"},
 		)
