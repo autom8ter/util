@@ -50,8 +50,11 @@ func NewJWTRouter() *JWTRouter {
 func (j *JWTRouter) JWTTokenHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		/* Sign the token with our secret */
-		tokenString, _ := j.GenerateJWT()
-
+		tokenString, err := j.GenerateJWT()
+		if err != nil {
+			w.Write([]byte(err.Error()))
+			return
+		}
 		/* Finally, write the token to the browser window */
 		w.Write([]byte(tokenString))
 	}
