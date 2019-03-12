@@ -69,7 +69,7 @@ func (j *JWTRouter) GenerateJWT() (string, error) {
 		clms[k] = v
 	}
 
-	tokenString, err := token.SignedString(j.SignKey)
+	tokenString, err := token.SignedString([]byte(j.SignKey))
 
 	if err != nil {
 		return "", fmt.Errorf("Something Went Wrong: %s", err.Error())
