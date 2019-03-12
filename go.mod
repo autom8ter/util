@@ -16,6 +16,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/prometheus/client_golang v0.9.2 // indirect
 	github.com/spf13/viper v1.3.1
+	github.com/urfave/negroni v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20190219172222-a4c6cb3142f2
 	golang.org/x/net v0.0.0-20190310074541-c10a0554eabf // indirect
 	google.golang.org/grpc v1.19.0 // indirect

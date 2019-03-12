@@ -19,6 +19,7 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/scrypt"
 	"hash/adler32"
@@ -448,4 +449,22 @@ func RandomToken() string {
 func UserPassword(username, password string) string {
 	auth := username + ":" + password
 	return base64.StdEncoding.EncodeToString([]byte(auth))
+}
+
+func GenerateJWT(signKey string, claims map[string]interface{}) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	clms := token.Claims.(jwt.MapClaims)
+
+	for k, v := range claims {
+		clms[k] = v
+	}
+
+	tokenString, err := token.SignedString([]byte(signKey))
+
+	if err != nil {
+		return "", fmt.Errorf("Something Went Wrong: %s", err.Error())
+	}
+
+	return tokenString, nil
 }
