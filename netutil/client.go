@@ -1,12 +1,14 @@
 package netutil
 
 import (
+	"encoding/base64"
 	"github.com/autom8ter/util"
 	"github.com/gorilla/sessions"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"io"
+	"math/rand"
 	"net/http"
 	"net/url"
 )
@@ -135,3 +137,23 @@ func (r *Client) NewSessionStore(key string) *sessions.CookieStore {
 }
 
 type ClientFunc func(c *Client, args []string)
+
+func (r *Client) RandomTokenString(length int) string {
+	b := make([]byte, length)
+	rand.Read(b)
+	return base64.StdEncoding.EncodeToString(b)
+}
+
+func (r *Client) RandomToken(length int) []byte {
+	b := make([]byte, length)
+	rand.Read(b)
+	return b
+}
+
+func (r *Client) DerivePassword(counter uint32, password_type, password, user, site string) string {
+	return util.DerivePassword(counter, password, password, user, site)
+}
+
+func (r *Client) GeneratePrivateKey(typ string) string {
+	return util.GeneratePrivateKey(typ)
+}
