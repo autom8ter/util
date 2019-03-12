@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/auth0-community/go-auth0"
 	"github.com/auth0/go-jwt-middleware"
+	"github.com/autom8ter/util"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 	"github.com/spf13/viper"
@@ -79,12 +80,13 @@ func (j *JWTRouter) JWTMiddleware() *jwtmiddleware.JWTMiddleware {
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 			return j.SignKey, nil
 		},
-		SigningMethod: jwt.SigningMethodHS256,
+		Debug:               true,
+		SigningMethod:       jwt.SigningMethodHS256,
 	})
 }
 
-func (j *JWTRouter) WithJWT(path string, method []string, handler http.HandlerFunc) {
-	j.Handle(path, j.JWTMiddleware().Handler(handler)).Methods(method...)
+func (j *JWTRouter) WithJWT(handler http.Handler) http.Handler {
+	return j.JWTMiddleware().Handler(handler)
 }
 
 func (j *JWTRouter) Auth0Middleware(next http.Handler) http.Handler {
@@ -108,7 +110,7 @@ func (j *JWTRouter) Auth0Middleware(next http.Handler) http.Handler {
 			fmt.Println(err)
 			fmt.Println("Token is not valid:", token)
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(fmt.Sprintf("Unauthorized \n%s", err.Error())))
+			w.Write([]byte(fmt.Sprintf("Unauthorized \n%s\n%s", err.Error(), util.ToPrettyJsonString(r.Header))))
 		} else {
 			next.ServeHTTP(w, r)
 		}
