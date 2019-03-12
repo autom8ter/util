@@ -24,7 +24,6 @@ func WithPProf(r *mux.Router) {
 	r.Handle("/debug/pprof/trace", http.HandlerFunc(pprof.Trace))
 }
 
-
 func WithStatus(r *mux.Router) {
 	r.HandleFunc("/status", func(w http.ResponseWriter, request *http.Request) {
 		fmt.Println("registered handler: ", "/status")
@@ -50,7 +49,6 @@ func WithStaticViews(r *mux.Router) {
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 	fmt.Println("registered file server handler: ", "./static/")
 }
-
 
 func WithRoutes(r *mux.Router) {
 	r.HandleFunc("/routes", RouteFunc(r))

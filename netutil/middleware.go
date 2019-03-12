@@ -7,6 +7,7 @@ import (
 	"github.com/urfave/negroni"
 	"net/http"
 )
+
 type MiddlewareFunc func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc)
 
 func (m MiddlewareFunc) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -43,7 +44,7 @@ func WithJWT(signingKey string, debug bool, path string, handler http.Handler, r
 		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
 			return []byte(signingKey), nil
 		},
-		Debug:         debug,
+		Debug: debug,
 		Extractor: jwtmiddleware.FromFirst(jwtmiddleware.FromAuthHeader,
 			jwtmiddleware.FromParameter("code"),
 			jwtmiddleware.FromParameter("auth-code")),
@@ -55,6 +56,3 @@ func WithJWT(signingKey string, debug bool, path string, handler http.Handler, r
 		negroni.Wrap(handler),
 	))
 }
-
-
-

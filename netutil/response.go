@@ -7,4 +7,3 @@ func ResponseHeaders(headers map[string]string, w http.ResponseWriter) {
 		w.Header().Set(k, v)
 	}
 }
-

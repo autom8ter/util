@@ -15,4 +15,3 @@ func OnErrorUnauthorized(w http.ResponseWriter, r *http.Request, err string) {
 func OnErrorInternal(w http.ResponseWriter, r *http.Request, err string) {
 	http.Error(w, err, http.StatusInternalServerError)
 }
-

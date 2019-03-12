@@ -15,9 +15,6 @@ func RequestBasicAuth(userName, password string, r *http.Request) {
 	r.SetBasicAuth(userName, password)
 }
 
-
 func RequestVars(req *http.Request) map[string]string {
 	return mux.Vars(req)
 }
-
-

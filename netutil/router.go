@@ -2,18 +2,19 @@ package netutil
 
 import (
 	"fmt"
+	"github.com/autom8ter/util"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 	"net/http"
 )
 
 type Router struct {
-	addr string
+	addr   string
 	router *mux.Router
-	chain *negroni.Negroni
+	chain  *negroni.Negroni
 }
 
-func NewRouter(addr string) *Router{
+func NewRouter(addr string) *Router {
 	m := mux.NewRouter()
 	n := negroni.Classic()
 	return &Router{
@@ -30,8 +31,7 @@ func (r *Router) WithPProf() {
 	WithPProf(r.router)
 }
 
-
-func(r *Router)  WithStatus() {
+func (r *Router) WithStatus() {
 	WithStatus(r.router)
 }
 
@@ -43,16 +43,15 @@ func (r *Router) WithStaticViews() {
 	WithStaticViews(r.router)
 }
 
-
-func (r *Router)  WithRoutes() {
+func (r *Router) WithRoutes() {
 	WithRoutes(r.router)
 }
 
-func (r *Router)  WithMetrics() {
+func (r *Router) WithMetrics() {
 	WithMetrics(r.router)
 }
 
-func (r *Router)  BeforeAfter(before, after http.HandlerFunc) {
+func (r *Router) BeforeAfter(before, after http.HandlerFunc) {
 	r.chain.Use(BeforeNextAfter(before, after))
 }
 
@@ -64,4 +63,22 @@ func (r *Router) Serve() {
 	fmt.Printf("starting http server on: %s\n", r.addr)
 	r.chain.UseHandler(r.router)
 	r.chain.Run(r.addr)
+}
+
+func (r *Router) NotImplememntedFunc() http.HandlerFunc {
+	return func(w http.ResponseWriter, request *http.Request) {
+		w.Write([]byte("Not Implemented"))
+	}
+}
+
+func (r *Router) OnErrorUnauthorized(w http.ResponseWriter, req *http.Request, err string) {
+	http.Error(w, err, http.StatusUnauthorized)
+}
+
+func (r *Router) OnErrorInternal(w http.ResponseWriter, req *http.Request, err string) {
+	http.Error(w, err, http.StatusInternalServerError)
+}
+
+func (r *Router) GenerateJWT(signingKey string, claims map[string]interface{}) (string, error) {
+	return util.GenerateJWT(signingKey, claims)
 }

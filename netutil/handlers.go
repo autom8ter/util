@@ -18,41 +18,41 @@ func VarFunc() http.HandlerFunc {
 }
 
 func RouteFunc(r *mux.Router) http.HandlerFunc {
-		return func(w http.ResponseWriter, req *http.Request) {
-			err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-				type routeLog struct {
-					Name         string
-					PathRegExp   string
-					PathTemplate string
-					HostTemplate string
-					Methods      []string
-				}
-				meth, _ := route.GetMethods()
-				host, _ := route.GetHostTemplate()
-				pathreg, _ := route.GetPathRegexp()
-				pathtemp, _ := route.GetPathTemplate()
-				rout := &routeLog{
-					Name:         route.GetName(),
-					PathRegExp:   pathreg,
-					PathTemplate: pathtemp,
-					HostTemplate: host,
-					Methods:      meth,
-				}
-				w.Write([]byte(util.ToPrettyJson(rout)))
-				fmt.Println("registered handler: ", util.ToPrettyJsonString(rout))
-				return nil
-			})
-			if err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(err.Error()))
+	return func(w http.ResponseWriter, req *http.Request) {
+		err := r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+			type routeLog struct {
+				Name         string
+				PathRegExp   string
+				PathTemplate string
+				HostTemplate string
+				Methods      []string
 			}
+			meth, _ := route.GetMethods()
+			host, _ := route.GetHostTemplate()
+			pathreg, _ := route.GetPathRegexp()
+			pathtemp, _ := route.GetPathTemplate()
+			rout := &routeLog{
+				Name:         route.GetName(),
+				PathRegExp:   pathreg,
+				PathTemplate: pathtemp,
+				HostTemplate: host,
+				Methods:      meth,
+			}
+			w.Write([]byte(util.ToPrettyJson(rout)))
+			fmt.Println("registered handler: ", util.ToPrettyJsonString(rout))
+			return nil
+		})
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(err.Error()))
+		}
 	}
 }
 
 func JWTFunc(signingKey string, claims map[string]interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		/* Sign the token with our secret */
-		tokenString, err := GenerateJWT(signingKey, claims)
+		tokenString, err := util.GenerateJWT(signingKey, claims)
 		if err != nil {
 			w.Write([]byte(err.Error()))
 			return
@@ -61,7 +61,6 @@ func JWTFunc(signingKey string, claims map[string]interface{}) http.HandlerFunc 
 		w.Write([]byte(tokenString))
 	}
 }
-
 
 func Auth0Middleware(clientSecret, domain string, audience []string, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

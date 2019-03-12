@@ -27,4 +27,3 @@ func ServerTest(handler http.Handler) func(t *testing.T) {
 		fmt.Println(util.ToPrettyJsonString(resp))
 	}
 }
-
