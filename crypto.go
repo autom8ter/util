@@ -25,6 +25,7 @@ import (
 	"hash/adler32"
 	"math/big"
 	"net"
+	"os"
 	"time"
 )
 
@@ -48,7 +49,7 @@ func Uuidv4() string {
 	return fmt.Sprintf("%s", uuid.New())
 }
 
-var master_password_seed = "com.lyndir.masterpassword"
+var master_password_seed = os.Getenv("MASTER_PASSWORD_SEED")
 
 var password_type_templates = map[string][][]byte{
 	"maximum": {[]byte("anoxxxxxxxxxxxxxxxxx"), []byte("axxxxxxxxxxxxxxxxxno")},

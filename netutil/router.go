@@ -1,10 +1,12 @@
 package netutil
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/autom8ter/util"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
+	"math/rand"
 	"net/http"
 )
 
@@ -81,4 +83,55 @@ func (r *Router) OnErrorInternal(w http.ResponseWriter, req *http.Request, err s
 
 func (r *Router) GenerateJWT(signingKey string, claims map[string]interface{}) (string, error) {
 	return util.GenerateJWT(signingKey, claims)
+}
+
+func (r *Router) SetResponseHeaders(headers map[string]string, w http.ResponseWriter) {
+	for k, v := range headers {
+		w.Header().Set(k, v)
+	}
+}
+
+func (r *Router) GetHeader(key string, w http.ResponseWriter) string {
+	return w.Header().Get(key)
+}
+
+func (r *Router) DelHeader(key string, w http.ResponseWriter) {
+	w.Header().Del(key)
+}
+
+func (r *Router) Do(r2 *http.Request) (*http.Response, error) {
+	client := http.DefaultClient
+	return client.Do(r2)
+}
+
+func (r *Router) Stringify(obj interface{}) string {
+	return util.ToPrettyJsonString(obj)
+}
+
+func (r *Router) JSONify(obj interface{}) []byte {
+	return util.ToPrettyJson(obj)
+}
+
+func (r *Router) RandomTokenString(length int) string {
+	b := make([]byte, length)
+	rand.Read(b)
+	return base64.StdEncoding.EncodeToString(b)
+}
+
+func (r *Router) RandomToken(length int) []byte {
+	b := make([]byte, length)
+	rand.Read(b)
+	return b
+}
+
+func (r *Router) DerivePassword(counter uint32, password_type, password, user, site string) string {
+	return util.DerivePassword(counter, password, password, user, site)
+}
+
+func (r *Router) GeneratePrivateKey(typ string) string {
+	return util.GeneratePrivateKey(typ)
+}
+
+func (r *Router) Render(s string, data interface{}) string {
+	return util.Render(s, data)
 }

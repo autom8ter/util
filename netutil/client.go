@@ -32,11 +32,10 @@ func NewClient(name, short, long string, u *url.URL, method string) *Client {
 	}
 }
 
-func (c *Client) RequestHeaders(headers map[string]string, r *http.Request) *http.Request {
+func (c *Client) SetHeaders(headers map[string]string) {
 	for k, v := range headers {
-		r.Header.Set(k, v)
+		c.req.Header.Set(k, v)
 	}
-	return r
 }
 
 func (c *Client) Stringify(obj interface{}) string {
@@ -47,32 +46,16 @@ func (c *Client) JSONify(obj interface{}) []byte {
 	return util.ToPrettyJson(obj)
 }
 
-func (c *Client) ReqPOST(r *http.Request) *http.Request {
-	r.Method = "POST"
-	return r
-}
-
-func (c *Client) ReqGET(r *http.Request) *http.Request {
-	r.Method = "GET"
-	return r
-}
-func (c *Client) ReqURL(r *http.Request, url *url.URL) *http.Request {
-	r.URL = url
-	return r
-}
-
 func (c *Client) AsCsv(s string) ([]string, error) {
 	return util.ReadAsCSV(s)
 }
 
-func (c *Client) WriteTo(r *http.Request, w io.Writer) *http.Request {
-	r.Write(w)
-	return r
+func (c *Client) WriteTo(w io.Writer) {
+	c.req.Write(w)
 }
 
-func (c *Client) RequestBasicAuth(userName, password string, r *http.Request) *http.Request {
-	r.SetBasicAuth(userName, password)
-	return r
+func (c *Client) RequestBasicAuth(userName, password string) {
+	c.req.SetBasicAuth(userName, password)
 }
 
 func (c *Client) Prompt(q string) string {
@@ -128,24 +111,22 @@ func (c *Client) GenerateJWT(signingKey string, claims map[string]interface{}) (
 	return util.GenerateJWT(signingKey, claims)
 }
 
-func (c *Client) Init(cfgFile string, envPrefix string, contentType []string, authorization []string, origin []string, cookie []string) {
-
+func (c *Client) Init(cfgFile string, envPrefix string, headers map[string]string) {
+	if headers == nil {
+		headers = make(map[string]string)
+	}
 	c.root.PersistentFlags().StringVarP(&cfgFile, "config", "c", "config.yaml", "relative path to config file")
-	c.root.PersistentFlags().StringSliceVar(&contentType, "content-type", []string{}, "request content-type headers")
-	c.root.PersistentFlags().StringSliceVar(&authorization, "authorization", []string{}, "request authorization headers")
-	c.root.PersistentFlags().StringSliceVar(&origin, "origin", []string{}, "request origin headers")
-	c.root.PersistentFlags().StringSliceVar(&cookie, "cookie", []string{}, "request cookie headers")
-
-	c.req.Header = http.Header{
-		"Content-Type":  contentType,
-		"Authorization": authorization,
-		"Origin":        origin,
-		"Cookie":        cookie,
+	c.root.PersistentFlags().StringToStringVar(&headers, "headers", nil, "request headers")
+	if viper.ConfigFileUsed() == "" {
+		util.InitConfig(cfgFile, envPrefix)
 	}
 	viper.BindPFlags(c.root.PersistentFlags())
 	viper.BindPFlags(c.root.Flags())
-
+	c.SetHeaders(headers)
 }
 
-type ReqFunc func(r *http.Request) *http.Request
+func (r *Client) Render(s string, data interface{}) string {
+	return util.Render(s, data)
+}
+
 type ClientFunc func(c *Client, args []string)
