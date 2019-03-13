@@ -4,6 +4,7 @@ import (
 	"github.com/autom8ter/util"
 	"github.com/autom8ter/util/fsutil"
 	"github.com/gorilla/mux"
+	"io"
 	"net/http"
 )
 
@@ -24,21 +25,36 @@ func FileToRequestBody(file string, req *http.Request) (*http.Request, error) {
 	return req, nil
 }
 
-func SetHeaders(headers map[string]string, req *http.Request) *http.Request {
+func SetHeaders(headers map[string]string, req *http.Request) {
 	for k, v := range headers {
 		req.Header.Set(k, v)
 	}
-	return req
 }
 
-func SetForm(vals map[string]string, req *http.Request) *http.Request {
+func SetForm(vals map[string]string, req *http.Request) {
 	for k, v := range vals {
 		req.Form.Set(k, v)
 	}
-	return req
 }
 
 func SetBasicAuth(user, password string, req *http.Request) *http.Request {
 	req.SetBasicAuth(user, password)
 	return req
+}
+
+func NewRequest(method, url, user, password string, headers map[string]string, form map[string]string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, url, body)
+	if err != nil {
+		return req, err
+	}
+	if user != "" || password != "" {
+		req.SetBasicAuth(user, password)
+	}
+	if headers != nil {
+		SetHeaders(headers, req)
+	}
+	if form != nil {
+		SetForm(form, req)
+	}
+	return req, nil
 }
