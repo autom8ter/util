@@ -8,12 +8,6 @@ import (
 	"net/http"
 )
 
-type MiddlewareFunc func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc)
-
-func (m MiddlewareFunc) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	m(rw, r, next)
-}
-
 func BeforeNextAfter(before, after http.HandlerFunc) MiddlewareFunc {
 	return func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 		if before != nil {
