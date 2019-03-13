@@ -104,7 +104,6 @@ func ProxyRequestFunc(uRL, method, user, password string, headers map[string]str
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
-	r := &http.Header{}
 	targetQuery := target.RawQuery
 	return func(req *http.Request) {
 		req.URL.Scheme = target.Scheme
