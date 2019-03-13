@@ -1,7 +1,8 @@
-package util
+package fsutil
 
 import (
 	"fmt"
+	"github.com/autom8ter/util"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 	"os"
@@ -21,7 +22,7 @@ func InitConfig(cfgFile string, envPrefix string) {
 	}
 }
 
-func SyncEnv() {
+func SyncEnvConfig() {
 	for _, e := range os.Environ() {
 		sp := strings.Split(e, "=")
 		viper.SetDefault(strings.ToLower(sp[0]), sp[1])
@@ -38,7 +39,7 @@ func SyncEnv() {
 }
 
 func RenderFromConfig(s string) string {
-	return Render(s, viper.AllSettings())
+	return util.Render(s, viper.AllSettings())
 }
 
 func YamlFromConfig() []byte {
@@ -51,5 +52,5 @@ func YamlFromConfig() []byte {
 }
 
 func JsonFromConfig() []byte {
-	return ToPrettyJson(viper.AllSettings())
+	return util.ToPrettyJson(viper.AllSettings())
 }
