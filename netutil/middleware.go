@@ -56,3 +56,20 @@ func WithJWT(signingKey string, debug bool, path string, handler http.Handler, r
 		negroni.Wrap(handler),
 	))
 }
+
+func Auth0IsAuthenticated(sessionName string) MiddlewareFunc {
+	return func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+
+		session, err := SessionFileStore.Get(r, sessionName)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if _, ok := session.Values["profile"]; !ok {
+			http.Redirect(w, r, "/", http.StatusSeeOther)
+		} else {
+			next(w, r)
+		}
+	}
+}

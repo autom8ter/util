@@ -24,6 +24,7 @@ require (
 	github.com/urfave/negroni v1.0.0
 	golang.org/x/crypto v0.0.0-20190219172222-a4c6cb3142f2
 	golang.org/x/net v0.0.0-20190310074541-c10a0554eabf // indirect
+	golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be
 	google.golang.org/grpc v1.19.0 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.0
 )
