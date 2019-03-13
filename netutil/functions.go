@@ -121,7 +121,7 @@ func ProxyReqFunc(uRL string) func(req *http.Request) {
 	}
 }
 
-func ProxyReqWithBasicAuthunc(uRL, user, password string) func(req *http.Request) {
+func ProxyReqWithBasicAuthFunc(uRL, user, password string) func(req *http.Request) {
 	target, err := url.Parse(uRL)
 	if err != nil {
 		log.Fatalln(err.Error())
