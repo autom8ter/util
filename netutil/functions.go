@@ -1,12 +1,24 @@
 package netutil
 
 import (
+	"github.com/autom8ter/util"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
+	"log"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 )
+
+//ResponseMiddleware is a function used to modify the response of a reverse proxy
+type ResponseMiddleware func(func(response *http.Response) error) func(response *http.Response) error
+
+//RequestMiddleware is a function used to modify the incoming request of a reverse proxy from a client
+type RequestMiddleware func(func(req *http.Request)) func(req *http.Request)
+
+//TransportMiddleware is a function used to modify the http RoundTripper that is used by a reverse proxy. The default RoundTripper is initially http.DefaultTransport
+type TransportMiddleware func(tripper http.RoundTripper) http.RoundTripper
 
 type ResponseFunc func(*http.Response) error
 type ErrorFunc func(http.ResponseWriter, *http.Request, error)
@@ -84,5 +96,50 @@ func CreatePassingHeaderMiddleware(decide PassedHeaderDeciderFunc) HandlerFunc {
 
 			next.ServeHTTP(w, r)
 		})
+	}
+}
+
+func ProxyReqFunc(uRL string) func(req *http.Request) {
+	target, err := url.Parse(uRL)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	targetQuery := target.RawQuery
+	return func(req *http.Request) {
+		req.URL.Scheme = target.Scheme
+		req.URL.Host = target.Host
+		req.URL.Path = util.SingleJoiningSlash(target.Path, req.URL.Path)
+		if targetQuery == "" || req.URL.RawQuery == "" {
+			req.URL.RawQuery = targetQuery + req.URL.RawQuery
+		} else {
+			req.URL.RawQuery = targetQuery + "&" + req.URL.RawQuery
+		}
+		if _, ok := req.Header["User-Agent"]; !ok {
+			// explicitly disable User-Agent so it's not set to default value
+			req.Header.Set("User-Agent", "")
+		}
+	}
+}
+
+func ProxyReqWithBasicAuthunc(uRL, user, password string) func(req *http.Request) {
+	target, err := url.Parse(uRL)
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+	targetQuery := target.RawQuery
+	return func(req *http.Request) {
+		req.URL.Scheme = target.Scheme
+		req.URL.Host = target.Host
+		req.URL.Path = util.SingleJoiningSlash(target.Path, req.URL.Path)
+		req.SetBasicAuth(user, password)
+		if targetQuery == "" || req.URL.RawQuery == "" {
+			req.URL.RawQuery = targetQuery + req.URL.RawQuery
+		} else {
+			req.URL.RawQuery = targetQuery + "&" + req.URL.RawQuery
+		}
+		if _, ok := req.Header["User-Agent"]; !ok {
+			// explicitly disable User-Agent so it's not set to default value
+			req.Header.Set("User-Agent", "")
+		}
 	}
 }
