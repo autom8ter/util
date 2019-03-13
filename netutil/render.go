@@ -10,6 +10,10 @@ import (
 
 type Template string
 
+func NewTemplate(s string) Template {
+	return Template(s)
+}
+
 func (t Template) String() string {
 	return string(t)
 }
@@ -25,8 +29,4 @@ func (t Template) Render(data interface{}) string {
 		return buf.String()
 	}
 	return t.String()
-}
-
-func AuthUserUserTemplate() Template {
-	return Template(auth0UserHTML)
 }
