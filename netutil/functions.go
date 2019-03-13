@@ -99,39 +99,31 @@ func CreatePassingHeaderMiddleware(decide PassedHeaderDeciderFunc) HandlerFunc {
 	}
 }
 
-func ProxyReqFunc(uRL string) func(req *http.Request) {
+func ProxyRequestFunc(uRL, method, user, password string, headers map[string]string, form map[string]string) func(req *http.Request) {
 	target, err := url.Parse(uRL)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
+	r := &http.Header{}
 	targetQuery := target.RawQuery
 	return func(req *http.Request) {
 		req.URL.Scheme = target.Scheme
 		req.URL.Host = target.Host
 		req.URL.Path = util.SingleJoiningSlash(target.Path, req.URL.Path)
-		if targetQuery == "" || req.URL.RawQuery == "" {
-			req.URL.RawQuery = targetQuery + req.URL.RawQuery
-		} else {
-			req.URL.RawQuery = targetQuery + "&" + req.URL.RawQuery
+		req.Method = method
+		if user != "" && password != "" {
+			req.SetBasicAuth(user, password)
 		}
-		if _, ok := req.Header["User-Agent"]; !ok {
-			// explicitly disable User-Agent so it's not set to default value
-			req.Header.Set("User-Agent", "")
+		if form != nil {
+			for k, v := range form {
+				req.Form.Set(k, v)
+			}
 		}
-	}
-}
-
-func ProxyReqWithBasicAuthFunc(uRL, user, password string) func(req *http.Request) {
-	target, err := url.Parse(uRL)
-	if err != nil {
-		log.Fatalln(err.Error())
-	}
-	targetQuery := target.RawQuery
-	return func(req *http.Request) {
-		req.URL.Scheme = target.Scheme
-		req.URL.Host = target.Host
-		req.URL.Path = util.SingleJoiningSlash(target.Path, req.URL.Path)
-		req.SetBasicAuth(user, password)
+		if headers != nil {
+			for k, v := range headers {
+				req.Header.Set(k, v)
+			}
+		}
 		if targetQuery == "" || req.URL.RawQuery == "" {
 			req.URL.RawQuery = targetQuery + req.URL.RawQuery
 		} else {
