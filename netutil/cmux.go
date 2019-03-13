@@ -1,7 +1,6 @@
-package engine
+package netutil
 
 import (
-	"github.com/autom8ter/util/netutil/grpc/api"
 	"github.com/pkg/errors"
 	"github.com/soheilhy/cmux"
 	"google.golang.org/grpc/grpclog"
@@ -12,14 +11,6 @@ import (
 type MuxServer struct {
 	mux cmux.CMux
 	lis net.Listener
-}
-
-// NewMuxServer creates MuxServer instance.
-func NewMuxServer(mux cmux.CMux, lis net.Listener) api.Interface {
-	return &MuxServer{
-		mux: mux,
-		lis: lis,
-	}
 }
 
 // Serve implements Server.Serve

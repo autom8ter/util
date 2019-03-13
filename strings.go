@@ -301,3 +301,15 @@ func Render(s string, data interface{}) string {
 func HorizontalLine() {
 	fmt.Println("<------------------------------------------------------------------------------------>")
 }
+
+func SingleJoiningSlash(a, b string) string {
+	aslash := strings.HasSuffix(a, "/")
+	bslash := strings.HasPrefix(b, "/")
+	switch {
+	case aslash && bslash:
+		return a + b[1:]
+	case !aslash && !bslash:
+		return a + "/" + b
+	}
+	return a + b
+}
