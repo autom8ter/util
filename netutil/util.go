@@ -85,7 +85,6 @@ func OutgoingHeaderMatcher(metadata string) (string, bool) {
 	return metadata, true
 }
 
-
 // SignalRunner runs a runner function until an interrupt signal is received, at which point it
 // will call stopper.
 func SignalRunner(runner, stopper func()) {
