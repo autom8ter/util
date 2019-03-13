@@ -2,7 +2,10 @@ package netutil
 
 import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/sirupsen/logrus"
 	"net/textproto"
+	"os"
+	"os/signal"
 	"strings"
 )
 
@@ -80,4 +83,22 @@ func IncomingHeaderMatcher(key string) (string, bool) {
 // We return any response metadata as is.
 func OutgoingHeaderMatcher(metadata string) (string, bool) {
 	return metadata, true
+}
+
+
+// SignalRunner runs a runner function until an interrupt signal is received, at which point it
+// will call stopper.
+func SignalRunner(runner, stopper func()) {
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt, os.Kill)
+
+	go func() {
+		runner()
+	}()
+
+	logrus.Info("hit Ctrl-C to shutdown")
+	select {
+	case <-signals:
+		stopper()
+	}
 }
