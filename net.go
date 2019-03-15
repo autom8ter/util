@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/http/httpguts"
 	"io"
@@ -318,4 +319,33 @@ func GetTokenFromHeader(header http.Header, headerKey, tokenKey string) string {
 
 func ValidHeaderField(s string) bool {
 	return httpguts.ValidHeaderFieldName(s)
+}
+
+func NewCors(origins, methods, headers []string, creds, options, debug bool, maxAge int) *cors.Cors {
+	if methods == nil {
+		methods = []string{
+			http.MethodHead,
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodDelete,
+		}
+	}
+	if origins == nil {
+		origins = []string{"*"}
+	}
+	if headers == nil {
+		headers = []string{"*"}
+	}
+	opts := cors.Options{
+		AllowedOrigins:     origins,
+		AllowedMethods:     methods,
+		AllowedHeaders:     headers,
+		MaxAge:             maxAge,
+		AllowCredentials:   creds,
+		OptionsPassthrough: options,
+		Debug:              debug,
+	}
+	return cors.New(opts)
 }
