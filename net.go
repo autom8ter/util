@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"github.com/gorilla/sessions"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/http/httpguts"
@@ -348,4 +349,37 @@ func NewCors(origins, methods, headers []string, creds, options, debug bool, max
 		Debug:              debug,
 	}
 	return cors.New(opts)
+}
+
+func ExecHandler(ctx context.Context, name, dir string, args ...string) http.HandlerFunc {
+	type Command struct {
+		Name   string   `json:"name"`
+		Dir    string   `json:"dir"`
+		Args   []string `json:"args"`
+		Output []byte   `json:"output"`
+	}
+	var cmd = &Command{
+		Name: name,
+		Dir:  dir,
+		Args: args,
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		bits, err := Exec(ctx, name, dir, args)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		cmd.Output = bits
+		w.Write(ToPrettyJson(cmd))
+	}
+}
+
+func NewSessionCookieStore(key string) *sessions.CookieStore {
+	return sessions.NewCookieStore([]byte(key))
+}
+
+type CorsConfig struct {
+	Origins, Methods, Headers []string
+	Creds, Options, Debug     bool
+	MaxAge                    int
 }
