@@ -1,6 +1,12 @@
 package util
 
-import "github.com/fatih/structs"
+import (
+	"fmt"
+	"github.com/fatih/structs"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+	"reflect"
+)
 
 type Struct struct{}
 
@@ -42,4 +48,29 @@ func (s *Struct) StructHasEmptyFields(obj interface{}, name string) bool {
 
 func (s *Struct) StructUninitialized(obj interface{}, name string) bool {
 	return newStruct(obj).IsZero()
+}
+
+func (s *Struct) Flagify(obj interface{}) {
+	fields := s.StructFields(obj)
+	for _, f := range fields {
+		if f.IsZero() {
+			switch f.Kind() {
+			case reflect.String:
+				err := f.Set(pflag.String(f.Name(), "", fmt.Sprintf("name: %s kind: %s", f.Name(), f.Kind())))
+				logrus.Warnln("failed to reflect flags to struct", err.Error())
+			case reflect.Bool:
+				err := f.Set(pflag.Bool(f.Name(), false, fmt.Sprintf("name: %s kind: %s", f.Name(), f.Kind())))
+				logrus.Warnln("failed to reflect flags to struct", err.Error())
+			case reflect.Int:
+				err := f.Set(pflag.Int(f.Name(), 0, fmt.Sprintf("name: %s kind: %s", f.Name(), f.Kind())))
+				logrus.Warnln("failed to reflect flags to struct", err.Error())
+			case reflect.Slice:
+				err := f.Set(pflag.StringSlice(f.Name(), []string{}, fmt.Sprintf("name: %s kind: %s", f.Name(), f.Kind())))
+				logrus.Warnln("failed to reflect flags to struct", err.Error())
+			case reflect.Map:
+				err := f.Set(pflag.StringToString(f.Name(), make(map[string]string), fmt.Sprintf("name: %s kind: %s", f.Name(), f.Kind())))
+				logrus.Warnln("failed to reflect flags to struct", err.Error())
+			}
+		}
+	}
 }

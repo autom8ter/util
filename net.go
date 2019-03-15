@@ -383,4 +383,3 @@ type CorsConfig struct {
 	Creds, Options, Debug     bool
 	MaxAge                    int
 }
-
