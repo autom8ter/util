@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -175,4 +176,17 @@ func MustExecAssets(dfn AssetDirFunc, afn AssetFunc, dir string, data interface{
 func MustExecHtmlAssets(dfn AssetDirFunc, afn AssetFunc, dir string, data interface{}, w io.Writer) error {
 	tmpl := MustParseHtmlAssets(dfn, afn, dir)
 	return tmpl.Execute(w, data)
+}
+
+func RenderFilesToResponseWriter(w http.ResponseWriter, relTmplPath string, data interface{}) {
+	cwd, _ := os.Getwd()
+	t, err := template.ParseFiles(filepath.Join(cwd, relTmplPath))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	err = t.Execute(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
