@@ -1,16 +1,17 @@
-package fsutil
+package util
 
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/autom8ter/util"
 	"github.com/spf13/afero"
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 )
@@ -25,17 +26,13 @@ func init() {
 
 var fs *afero.Afero
 
-func NewFs() *afero.Afero {
-	return fs
-}
-
 // StdType is the type of standard stream
 // a writer can multiplex to.
-type StdType byte
+type StdIOType byte
 
 const (
 	// Stdin represents standard input stream type.
-	Stdin StdType = iota
+	Stdin StdIOType = iota
 	// Stdout represents standard output stream type.
 	Stdout
 	// Stderr represents standard error steam type.
@@ -94,7 +91,7 @@ func (w *stdWriter) Write(p []byte) (n int, err error) {
 // This allows multiple write streams (e.g. stdout and stderr) to be muxed into a single connection.
 // `t` indicates the id of the stream to encapsulate.
 // It can be stdcopy.Stdin, stdcopy.Stdout, stdcopy.Stderr.
-func NewStdWriter(w io.Writer, t StdType) io.Writer {
+func NewStdIOWriter(w io.Writer, t StdIOType) io.Writer {
 	return &stdWriter{
 		Writer: w,
 		prefix: byte(t),
@@ -111,7 +108,7 @@ func NewStdWriter(w io.Writer, t StdType) io.Writer {
 // In other words: if `err` is non nil, it indicates a real underlying error.
 //
 // `written` will hold the total number of bytes written to `dstout` and `dsterr`.
-func StdCopy(dstout, dsterr io.Writer, src io.Reader) (written int64, err error) {
+func IOStdCopy(dstout, dsterr io.Writer, src io.Reader) (written int64, err error) {
 	var (
 		buf       = make([]byte, startingBufLen)
 		bufLen    = len(buf)
@@ -138,7 +135,7 @@ func StdCopy(dstout, dsterr io.Writer, src io.Reader) (written int64, err error)
 			}
 		}
 
-		stream := StdType(buf[stdWriterFdIndex])
+		stream := StdIOType(buf[stdWriterFdIndex])
 		// Check the first byte to know where to write
 		switch stream {
 		case Stdin:
@@ -252,23 +249,49 @@ func ScanAndReplaceFile(f afero.File, replacements ...string) {
 	}
 	_, err = io.WriteString(newf, newstr)
 	if err != nil {
-		util.Exit(1, errFmt, err, "failed to write string to new file")
+		Exit(1, errFmt, err, "failed to write string to new file")
 	}
 	fmt.Println("successfully scanned and replaced: " + f.Name())
 }
 
-func ScanAndReplace(r io.Reader, replacements ...string) string {
-	scanner := bufio.NewScanner(r)
-	rep := strings.NewReplacer(replacements...)
-	var text string
-	for scanner.Scan() {
-		text = rep.Replace(scanner.Text())
+func ChDir(path string) {
+	if err := os.Chdir(path); err != nil {
+		Exit(1, errFmt, err, "failed to change working directory")
 	}
-	return text
 }
 
-func Cd(path string) {
-	if err := os.Chdir(path); err != nil {
-		util.Exit(1, errFmt, err, "failed to change working directory")
+func Exec(ctx context.Context, name, dir string, env []string, args ...string) ([]byte, error) {
+	cmd := exec.CommandContext(ctx, name, args...)
+	if env != nil {
+		cmd.Env = env
 	}
+	if dir != "" {
+		cmd.Dir = dir
+	}
+	return cmd.CombinedOutput()
+}
+
+// consistentReadSync is the main functionality of ConsistentRead but
+// introduces a sync callback that can be used by the tests to mutate the file
+// from which the test data is being read
+func ConsistentReadFile(filename string, attempts int, sync func(int)) ([]byte, error) {
+	oldContent, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < attempts; i++ {
+		if sync != nil {
+			sync(i)
+		}
+		newContent, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return nil, err
+		}
+		if bytes.Compare(oldContent, newContent) == 0 {
+			return newContent, nil
+		}
+		// Files are different, continue reading
+		oldContent = newContent
+	}
+	return nil, fmt.Errorf("could not get consistent content of %s after %d attempts", filename, attempts)
 }

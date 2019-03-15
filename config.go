@@ -1,8 +1,8 @@
-package fsutil
+package util
 
 import (
 	"fmt"
-	"github.com/autom8ter/util"
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 	"gopkg.in/yaml.v2"
 	"os"
@@ -39,7 +39,7 @@ func SyncEnvConfig() {
 }
 
 func RenderFromConfig(s string) string {
-	return util.Render(s, viper.AllSettings())
+	return Render(s, viper.AllSettings())
 }
 
 func YamlFromConfig() []byte {
@@ -52,5 +52,9 @@ func YamlFromConfig() []byte {
 }
 
 func JsonFromConfig() []byte {
-	return util.ToPrettyJson(viper.AllSettings())
+	return ToPrettyJson(viper.AllSettings())
+}
+
+func DotEnv() error {
+	return godotenv.Load()
 }

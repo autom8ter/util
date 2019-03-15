@@ -441,15 +441,10 @@ func GetAlternateDNSStrs(alternateDNS []interface{}) ([]string, error) {
 	return alternateDNSStrs, nil
 }
 
-func RandomToken() string {
-	b := make([]byte, 32)
+func RandomToken(length int) string {
+	b := make([]byte, length)
 	rand.Read(b)
 	return base64.StdEncoding.EncodeToString(b)
-}
-
-func UserPassword(username, password string) string {
-	auth := username + ":" + password
-	return base64.StdEncoding.EncodeToString([]byte(auth))
 }
 
 func GenerateJWT(signKey string, claims map[string]interface{}) (string, error) {

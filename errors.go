@@ -6,19 +6,18 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-	"log"
 	"os"
 )
 
 func FatalIfErr(e error, msg string, arg interface{}) {
 	if e != nil {
-		log.Fatalf("Error: %v Msg: %v Arg: %v", e, msg, arg)
+		logrus.Fatalf("Error: %v Msg: %v Arg: %v", e, msg, arg)
 	}
 }
 
 func PrintIfErr(e error, msg string, arg interface{}) {
 	if e != nil {
-		log.Printf("Error: %v Msg: %v Arg: %v", e, msg, arg)
+		logrus.Printf("Error: %v Msg: %v Arg: %v", e, msg, arg)
 	}
 }
 

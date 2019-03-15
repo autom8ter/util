@@ -1,8 +1,8 @@
-package fsutil
+package util
 
 import (
+	"bytes"
 	"github.com/Masterminds/sprig"
-	"github.com/autom8ter/util"
 	"github.com/spf13/viper"
 	"html/template"
 	"io"
@@ -12,10 +12,23 @@ import (
 	"strings"
 )
 
+func RenderTmpl(t string, data interface{}) string {
+	if strings.Contains(t, "{{") {
+		tmpl, err := template.New("").Funcs(sprig.GenericFuncMap()).Parse(t)
+		FatalIfErr(err, "failed to create template to render string", t)
+		buf := bytes.NewBuffer(nil)
+		if err := tmpl.Execute(buf, data); err != nil {
+			FatalIfErr(err, "failed to render string at execution", t)
+		}
+		return buf.String()
+	}
+	return t
+}
+
 func WalkTemplatesFromConfig(dir string, outDir string) {
 	if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			util.Exit(1, errFmt, err, "error walking path")
+			Exit(1, errFmt, err, "error walking path")
 		}
 		if strings.Contains(path, ".tmpl") {
 			b, err := ioutil.ReadFile(path)
@@ -32,14 +45,14 @@ func WalkTemplatesFromConfig(dir string, outDir string) {
 		}
 		return nil
 	}); err != nil {
-		util.Exit(1, errFmt, err, "failed to walk templates")
+		Exit(1, errFmt, err, "failed to walk templates")
 	}
 }
 
 func WalkTemplates(dir, outDir string, data interface{}) {
 	if err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			util.Exit(1, errFmt, err, "error walking path")
+			Exit(1, errFmt, err, "error walking path")
 		}
 		if strings.Contains(path, ".tmpl") {
 			b, err := ioutil.ReadFile(path)
@@ -56,7 +69,7 @@ func WalkTemplates(dir, outDir string, data interface{}) {
 		}
 		return nil
 	}); err != nil {
-		util.Exit(1, errFmt, err, "failed to walk templates")
+		Exit(1, errFmt, err, "failed to walk templates")
 	}
 }
 

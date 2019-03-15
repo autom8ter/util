@@ -11,7 +11,7 @@ import (
 
 func Prompt(question string) string {
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("string | " + question)
+	fmt.Print(question)
 	text, _ := reader.ReadString('\n')
 	text = strings.TrimSpace(text)
 	text = strings.TrimRight(text, "`")
