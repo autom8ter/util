@@ -383,3 +383,38 @@ type CorsConfig struct {
 	Creds, Options, Debug     bool
 	MaxAge                    int
 }
+
+type HTTPHandlerFunc func(w http.ResponseWriter, r *http.Request)
+
+func (h HTTPHandlerFunc) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	h(rw, r)
+}
+
+func (h HTTPHandlerFunc) AsHandlerFunc() http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		h(writer, request)
+	}
+}
+
+func (h HTTPHandlerFunc) Before(after http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h(w, r)
+		after(w, r)
+	}
+}
+
+func (h HTTPHandlerFunc) After(before http.HandlerFunc) HTTPHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		before(w, r)
+		h(w, r)
+	}
+}
+
+func (h HTTPHandlerFunc) Chain(chained ...http.HandlerFunc) HTTPHandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		h(w, r)
+		for _, fn := range chained {
+			fn(w, r)
+		}
+	}
+}
